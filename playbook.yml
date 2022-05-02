@@ -13,7 +13,7 @@
 
     - name: Install Packages
       apk:
-        name: bash,curl,doas,docker,docker-compose,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
+        name: bash,curl,docker,docker-compose,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
         update_cache: true
         state: present
 
@@ -34,7 +34,6 @@
         state: present
         regexp: "^%wheel"
         line: "%wheel ALL=(ALL) ALL: ALL"
-        validate: "/usr/bin/visudo -cf %s"
 
     - name: Create User
       user:
