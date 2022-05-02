@@ -23,11 +23,18 @@
         state: started
         enabled: true
 
-    - name: Configure doas
-      shell: |
-        cat <<EOF >/etc/doas.d/doas.conf
-        permit persist :wheel
-        EOF
+    - name: Create Group 'wheel'
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' to have sudo privileges
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: "^%wheel"
+        line: "%wheel ALL=(ALL) ALL: ALL"
+        validate: "/usr/bin/visudo -cf %s"
 
     - name: Create User
       user:
