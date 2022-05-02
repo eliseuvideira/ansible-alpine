@@ -1,0 +1,6 @@
+[servers]
+10.0.10.100
+
+[servers:vars]
+username=alpine
+password=alpine-pass

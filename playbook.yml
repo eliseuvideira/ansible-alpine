@@ -1,0 +1,53 @@
+---
+- name: Setup Alpine Server
+  hosts: servers
+  remote_user: root
+  tasks:
+    - name: Setup apk repositories
+      shell: |
+        cat > /etc/apk/repositories << EOF; $(echo)
+        https://dl-cdn.alpinelinux.org/alpine/v$(cut -d'.' -f1,2 /etc/alpine-release)/main/
+        https://dl-cdn.alpinelinux.org/alpine/v$(cut -d'.' -f1,2 /etc/alpine-release)/community/
+        https://dl-cdn.alpinelinux.org/alpine/edge/testing/
+        EOF
+
+    - name: Install Packages
+      apk:
+        name: bash,curl,doas,docker,docker-compose,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
+        update_cache: true
+        state: present
+
+    - name: Enable and Start Docker
+      sysvinit:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Configure doas
+      shell: |
+        cat <<EOF >/etc/doas.d/doas.conf
+        permit persist :wheel
+        EOF
+
+    - name: Create User
+      user:
+        name: "{{ username }}"
+        password: "{{ password | password_hash('sha512') }}"
+        shell: /bin/zsh
+        groups: wheel
+        append: true
+        generate_ssh_key: true
+        update_password: always
+
+    - name: Clone .dotfiles
+      become: true
+      become_user: "{{ username }}"
+      git:
+        repo: https://github.com/eliseuvideira/.dotfiles-alpine
+        dest: ~/.dotfiles
+
+    - name: Install .dotfiles
+      become: true
+      become_user: "{{ username }}"
+      shell: |
+        cd ~/.dotfiles && make install
