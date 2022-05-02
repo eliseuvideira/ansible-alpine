@@ -40,7 +40,7 @@
         name: "{{ username }}"
         password: "{{ password | password_hash('sha512') }}"
         shell: /bin/zsh
-        groups: wheel
+        groups: wheel,docker
         append: true
         generate_ssh_key: true
         update_password: always
