@@ -5,17 +5,44 @@
   tasks:
     - name: Setup apk repositories
       shell: |
-        cat > /etc/apk/repositories << EOF; $(echo)
+        #!/bin/sh
+        get_repositories() {
+          cat << EOF;
         https://dl-cdn.alpinelinux.org/alpine/v$(cut -d'.' -f1,2 /etc/alpine-release)/main/
         https://dl-cdn.alpinelinux.org/alpine/v$(cut -d'.' -f1,2 /etc/alpine-release)/community/
         https://dl-cdn.alpinelinux.org/alpine/edge/testing/
         EOF
+        }
+        repositories="$(mktemp)"
+        get_repositories >"$repositories"
+        if ! cmp -s "$repositories" /etc/apk/repositories; then
+          get_repositories >/etc/apk/repositories
+          printf "changed"
+        else
+          printf "unchanged"
+        fi
+        # rm -f "$repositories"
+      register: res
+      changed_when: res.stdout == "changed"
 
     - name: Install Packages
       apk:
-        name: bash,curl,docker,docker-compose,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
+        name: bash,curl,docker,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
         update_cache: true
         state: present
+
+    - name: Install Docker Compose
+      shell: |
+        #!/bin/sh
+        if [ -x /usr/local/bin/docker-compose ]; then
+          printf "unchanged"
+          exit 0
+        fi
+        curl -sSL https://github.com/docker/compose/releases/download/v2.4.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        printf "changed"
+      register: res
+      changed_when: res.stdout == "changed"
 
     - name: Enable and Start Docker
       sysvinit:
@@ -32,8 +59,9 @@
       lineinfile:
         dest: /etc/sudoers
         state: present
-        regexp: "^%wheel"
-        line: "%wheel ALL=(ALL) ALL: ALL"
+        regexp: "^%wheel ALL=(ALL) ALL"
+        line: "%wheel ALL=(ALL) ALL"
+        validate: "/usr/sbin/visudo -cf %s"
 
     - name: Create User
       user:
