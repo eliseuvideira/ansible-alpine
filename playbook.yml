@@ -21,7 +21,7 @@
         else
           printf "unchanged"
         fi
-        # rm -f "$repositories"
+        rm -f "$repositories"
       register: res
       changed_when: res.stdout == "changed"
 
