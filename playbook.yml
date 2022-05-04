@@ -113,4 +113,3 @@
       shell: |
         #!/bin/sh
         cd ~/.dotfiles && make install
-      when: clone_dotfiles.changed == true
