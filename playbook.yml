@@ -94,7 +94,7 @@
       git:
         repo: https://github.com/eliseuvideira/.dotfiles-alpine
         dest: ~/.dotfiles
-      register: clone_dotfiles
+      notify: Install .dotfiles
 
     - name: Update Hostname
       hostname:
