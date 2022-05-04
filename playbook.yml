@@ -3,7 +3,7 @@
   hosts: servers
   remote_user: root
   tasks:
-    - name: Setup apk repositories
+    - name: Setup apk Repositories
       shell: |
         #!/bin/sh
         get_repositories() {
@@ -22,12 +22,27 @@
           printf "unchanged"
         fi
         rm -f "$repositories"
-      register: res
-      changed_when: res.stdout == "changed"
+      register: shell_output
+      changed_when: shell_output.stdout == "changed"
 
     - name: Install Packages
       apk:
-        name: bash,curl,docker,git,htop,less,make,neovim,oh-my-zsh,rsync,stow,sudo,tmux,vim,zsh
+        name:
+          - bash
+          - curl
+          - docker
+          - git
+          - htop
+          - less
+          - make
+          - neovim
+          - oh-my-zsh
+          - rsync
+          - stow
+          - sudo
+          - tmux
+          - vim
+          - zsh
         update_cache: true
         state: present
 
@@ -45,7 +60,7 @@
       changed_when: res.stdout == "changed"
 
     - name: Enable and Start Docker
-      sysvinit:
+      service:
         name: docker
         state: started
         enabled: true
@@ -66,22 +81,36 @@
     - name: Create User
       user:
         name: "{{ username }}"
-        password: "{{ password | password_hash('sha512') }}"
+        password: "{{ password | password_hash('sha512', password_salt) }}"
         shell: /bin/zsh
         groups: wheel,docker
         append: true
         generate_ssh_key: true
         update_password: always
 
-    - name: Clone .dotfiles
+    - name: Clone and Update .dotfiles
       become: true
       become_user: "{{ username }}"
       git:
         repo: https://github.com/eliseuvideira/.dotfiles-alpine
         dest: ~/.dotfiles
+      register: clone_dotfiles
+
+    - name: Update Hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+      notify: Restart Hostname
+
+  handlers:
+    - name: Restart Hostname
+      service:
+        name: hostname
+        state: restarted
 
     - name: Install .dotfiles
       become: true
       become_user: "{{ username }}"
       shell: |
+        #!/bin/sh
         cd ~/.dotfiles && make install
+      when: clone_dotfiles.changed == true

@@ -4,3 +4,4 @@
 [servers:vars]
 username=alpine
 password=alpine-pass
+password_salt=alpine-salt
