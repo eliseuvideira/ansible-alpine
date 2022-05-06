@@ -46,6 +46,10 @@
         update_cache: true
         state: present
 
+    - name: Upgrade apk Packages
+      apk:
+        upgrade: true
+
     - name: Install Docker Compose
       shell: |
         #!/bin/sh
@@ -100,6 +104,16 @@
       hostname:
         name: "{{ inventory_hostname }}"
       notify: Restart Hostname
+
+    - name: Configure Cron
+      cron:
+        name: restart once per week
+        job: /sbin/reboot
+        minute: "0"
+        hour: "2"
+        day: "*"
+        month: "*"
+        weekday: "1"
 
   handlers:
     - name: Restart Hostname
