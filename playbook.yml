@@ -21,7 +21,7 @@
         else
           printf "unchanged"
         fi
-        rm -f "$repositories"
+        trap 'rm -f "$repositories"' EXIT
       register: shell_output
       changed_when: shell_output.stdout == "changed"
 
