@@ -78,8 +78,8 @@
       lineinfile:
         dest: /etc/sudoers
         state: present
-        regexp: "^%wheel ALL=(ALL) ALL"
-        line: "%wheel ALL=(ALL) ALL"
+        regexp: '^# %wheel ALL=\(ALL\) NOPASSWD: ALL'
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
         validate: "/usr/sbin/visudo -cf %s"
 
     - name: Create User
